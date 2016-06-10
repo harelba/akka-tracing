@@ -13,7 +13,7 @@ object AkkaTracingBuild extends Build {
     publicationSettings ++
     Seq (
       organization := "com.github.levkhomich",
-      version := "0.4",
+      version := "0.4-play24",
       homepage := Some(url("https://github.com/levkhomich/akka-tracing")),
       startYear := Some(2014),
       licenses := Seq("Apache Public License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
@@ -158,7 +158,7 @@ object Dependencies {
   object Compile {
     val akkaActor    = "com.typesafe.akka" %% "akka-actor"          % "2.3.7"
     val sprayRouting = "io.spray"          %% "spray-routing"       % "1.3.2"
-    val play         = "com.typesafe.play" %% "play"                % "2.3.7"
+    val play         = "com.typesafe.play" %% "play"                % "2.4.3"
     val config       = "com.typesafe"      %  "config"              % "1.2.1"
     val libThrift    = "org.apache.thrift" %  "libthrift"           % "0.9.2"
     val slf4jLog4j12 = "org.slf4j"         %  "slf4j-log4j12"       % "1.7.7"

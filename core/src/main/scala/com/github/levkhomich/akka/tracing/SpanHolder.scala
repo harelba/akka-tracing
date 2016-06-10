@@ -78,6 +78,7 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
 
   override def receive: Receive = {
     case Sample(ts, serviceName, rpcName, timestamp) =>
+      log.info(s"RLRL - Sampling ${serviceName} ${rpcName} ${timestamp}")
       lookup(ts.$spanId) match {
         case None =>
           val endpoint = new thrift.Endpoint(localAddress, 0, serviceName)
@@ -88,6 +89,7 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
       }
 
     case Receive(ts, serviceName, rpcName, timestamp) =>
+      log.info(s"RLRL - Receiving ${serviceName} ${rpcName} ${timestamp}")
       lookup(ts.$spanId) match {
         case Some(span) if span.get_annotations_size() == 0 =>
           val endpoint = new thrift.Endpoint(localAddress, 0, serviceName)
@@ -97,12 +99,14 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
       }
 
     case Enqueue(spanId, cancelJob) =>
+      log.info(s"RLRL - Enqueing ${spanId}")
       enqueue(spanId, cancelJob)
 
     case SendEnqueued =>
       send()
 
     case AddAnnotation(spanId, timestamp, msg) =>
+      log.info(s"RLRL - Adding annotation ${spanId} ${timestamp} ${msg}")
       lookup(spanId) foreach { spanInt =>
         val a = new thrift.Annotation(adjustedMicroTime(timestamp), msg)
         a.set_host(endpointFor(spanId))
@@ -113,6 +117,7 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
       }
 
     case AddBinaryAnnotation(spanId, key, value, valueType) =>
+      log.info(s"RLRL - Adding binary annotation ${spanId} ${key} ${value} ${valueType}")
       lookup(spanId) foreach { spanInt =>
         val a = new thrift.BinaryAnnotation(key, value, valueType)
         a.set_host(endpointFor(spanId))
@@ -120,6 +125,7 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
       }
 
     case CreateChildSpan(spanId, parentId, maybeTraceId, spanName) =>
+      log.info(s"RLRL - Creating child span for ${spanId} ${spanName}")
       // do not sample if parent was not sampled
       maybeTraceId.foreach(
         createSpan(spanId, Some(parentId), _, spanName)
@@ -168,6 +174,7 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
   }
 
   private[this] def send(): Unit = {
+    log.info(s"RLRL - Sending ${submittedSpans.length} submitted spans next batch length is ${nextBatch.length}")
     import scala.collection.JavaConversions._
     if (!nextBatch.isEmpty) {
       submittedSpans ++= nextBatch.map(spanToLogEntry)
@@ -214,6 +221,7 @@ private[tracing] class SpanHolder(transport: TTransport) extends Actor with Acto
     val thriftBytes = thriftBuffer.getArray.take(thriftBuffer.length)
     thriftBuffer.reset()
     val encodedSpan = DatatypeConverter.printBase64Binary(thriftBytes) + '\n'
+    log.info(s"RLRL - Converted span ${spanInt.id} to log entry. Length of encoded span is ${encodedSpan.length}")
     new thrift.LogEntry("zipkin", encodedSpan)
   }
 
