@@ -47,14 +47,11 @@ final class TracedAskableActorRef(val actorRef: ActorRef) extends AnyVal {
   def ask(message: BaseTracingSupport)
          (implicit timeout: Timeout, ec: ExecutionContext, trace: TracingExtensionImpl): Future[Any] = {
     import akka.pattern.{ask => akkaAsk}
-    log.info(s"RLRL - Before Akka Ask for ${message}")
     akkaAsk(actorRef, message).transform({ resp =>
-      log.info(s"RLRL - After Akka Ask for ${message}")
       trace.record(message, "response: " + resp)
       trace.finish(message)
       resp
     }, { e =>
-      log.error(s"RLRL - After Akka Ask failure for ${message}")
       trace.record(message, e)
       trace.finish(message)
       e
@@ -73,14 +70,11 @@ final class TracedAskableActorSelection(val actorSel: ActorSelection) extends An
   def ask(message: BaseTracingSupport)
          (implicit timeout: Timeout, ec: ExecutionContext, trace: TracingExtensionImpl): Future[Any] = {
     import akka.pattern.{ask => akkaAsk}
-    log.info(s"RLRL - Before Akka Ask for selection ${message}")
     akkaAsk(actorSel, message).transform({ resp =>
-      log.info(s"RLRL - After Akka Ask for selection ${message}")
       trace.record(message, "response: " + resp)
       trace.finish(message)
       resp
     }, { e =>
-      log.error(s"RLRL - After Akka Ask for selection - failure for ${message}")
       trace.record(message, e)
       trace.finish(message)
       e
