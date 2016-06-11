@@ -27,15 +27,12 @@ import org.slf4j.LoggerFactory
 
 
 trait TracingSettings extends GlobalSettings with PlayControllerTracing {
-  val debugLog = LoggerFactory.getLogger(TracingSettings.this.getClass)
 
   protected def sample(request: RequestHeader): Unit = {
-    debugLog.info(s"RLRL - Performing a sample on the request ${request.uri}")
     trace.sample(request, play.libs.Akka.system.name)
   }
 
   protected def addHttpAnnotations(request: RequestHeader): Unit = {
-    debugLog.info(s"RLRL - Adding http annotations ${request.uri}")
     // TODO: use batching
     trace.recordKeyValue(request, "request.path", request.path)
     trace.recordKeyValue(request, "request.method", request.method)
@@ -67,13 +64,11 @@ trait TracingSettings extends GlobalSettings with PlayControllerTracing {
   protected class TracedAction(delegateAction: EssentialAction) extends EssentialAction with RequestTaggingHandler {
     override def apply(request: RequestHeader): Iteratee[Array[Byte], Result] = {
       import scala.concurrent.ExecutionContext.Implicits.global
-      debugLog.info(s"RLRL - Inside TracedAction.apply for ${request.uri}")
       if (requestTraced(request)) {
         sample(request)
         addHttpAnnotations(request)
       }
       delegateAction(request) map { r => Result(r.header,r.body.onDoneEnumerating({
-        debugLog.info(s"RLRL - Finishing trace for request ${request.uri}")
         trace.recordKeyValue(request, "statusCode", r.header.status)
         trace.finish(request)
       }),r.connection)
@@ -89,18 +84,15 @@ trait TracingSettings extends GlobalSettings with PlayControllerTracing {
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] =
-    super.onRouteRequest(request) map { r => debugLog.info(s"RLRL - routing request ${r}") ; r } map {
+    super.onRouteRequest(request) map {
       case alreadyTraced: TracedAction =>
-        debugLog.info(s"RLRL - Already Traced - No need to wrap it - ${request.uri}")
         alreadyTraced
       case alreadyTagged: EssentialAction with RequestTaggingHandler =>
-        debugLog.info(s"RLRL - Already tagged, wrapping it - ${request.uri}")
         new TracedAction(alreadyTagged) {
           override def tagRequest(request: RequestHeader): RequestHeader =
             super.tagRequest(alreadyTagged.tagRequest(request))
         }
       case action: EssentialAction =>
-        debugLog.info(s"RLRL - Wrapping action with TracedAction ${request.uri}")
         new TracedAction(action)
       case ws @ WebSocket(f) =>
         WebSocket[ws.FramesIn, ws.FramesOut](request =>
@@ -114,7 +106,6 @@ trait TracingSettings extends GlobalSettings with PlayControllerTracing {
             ws.f(request)
         )(ws.inFormatter, ws.outFormatter)
       case handler =>
-        debugLog.info(s"RLRL - defaulting to regular handler ${request.uri}")
         handler
     }
 
@@ -124,7 +115,6 @@ trait TracingSettings extends GlobalSettings with PlayControllerTracing {
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
-    debugLog.info(s"RLRL - Error handling ${request.uri}")
     trace.record(request, ex)
     super.onError(request, ex)
   }
