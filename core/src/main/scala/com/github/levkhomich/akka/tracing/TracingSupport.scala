@@ -16,6 +16,8 @@
 
 package com.github.levkhomich.akka.tracing
 
+import akka.actor.ActorSystem
+
 import scala.util.Random
 
 trait BaseTracingSupport extends Any {
@@ -89,4 +91,10 @@ class ResponseTracingSupport[T](val msg: T) extends AnyVal {
     msg
   }
 }
+
+case class TraceSource(msg : TracingSupport) extends TracingSupport {
+
+}
+
+
 
