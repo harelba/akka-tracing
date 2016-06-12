@@ -40,13 +40,10 @@ class TracingLogger extends Actor with ActorTracing {
       sender() ! LoggerInitialized
 
     case e: LogEvent =>
-      org.slf4j.LoggerFactory.getLogger("RLRL").info(s"Gonna Try to trace ${e}")
       e.mdc.get(TracingHeaders.SpanId) match {
         case Some(spanId: Long) =>
-          org.slf4j.LoggerFactory.getLogger("RLRL").info(s"Tracing with span ${spanId} - ${e}")
           trace.record(spanId, e.getClass.getSimpleName + ": " + e.message)
         case _ =>
-          org.slf4j.LoggerFactory.getLogger("RLRL").info(s"NOT Tracing ${e}")
           // do nothing
       }
   }
