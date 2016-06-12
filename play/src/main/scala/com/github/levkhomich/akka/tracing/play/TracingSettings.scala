@@ -17,13 +17,15 @@
 package com.github.levkhomich.akka.tracing.play
 
 import scala.collection.Map
+import scala.concurrent.Future
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
+
 import play.api.{GlobalSettings, Routes}
 import play.api.libs.iteratee.Iteratee
 import play.api.mvc._
+
 import com.github.levkhomich.akka.tracing.http.TracingHeaders
-import org.slf4j.LoggerFactory
 
 
 trait TracingSettings extends GlobalSettings with PlayControllerTracing {
@@ -84,7 +86,7 @@ trait TracingSettings extends GlobalSettings with PlayControllerTracing {
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] =
-    super.onRouteRequest(request) map {
+    super.onRouteRequest(request).map {
       case alreadyTraced: TracedAction =>
         alreadyTraced
       case alreadyTagged: EssentialAction with RequestTaggingHandler =>

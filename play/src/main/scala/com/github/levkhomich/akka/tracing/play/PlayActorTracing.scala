@@ -17,7 +17,7 @@
 package com.github.levkhomich.akka.tracing.play
 
 import akka.actor.Actor
-import play.api.Routes
+import play.api.routing.Router.Tags.RoutePattern
 import play.api.mvc.RequestHeader
 
 import com.github.levkhomich.akka.tracing.{TracingExtensionImpl, BaseTracingSupport, ActorTracing}
@@ -46,7 +46,7 @@ class PlayRequestTracingSupport(val headers: RequestHeader) extends AnyVal with 
     headers.tags.get(TracingHeaders.TraceId).map(java.lang.Long.parseLong)
 
   override protected[tracing] def spanName: String = {
-    val route = headers.tags.getOrElse(Routes.ROUTE_PATTERN, headers.path)
+    val route = headers.tags.getOrElse(RoutePattern, headers.path)
     headers.method + " " + route
   }
 

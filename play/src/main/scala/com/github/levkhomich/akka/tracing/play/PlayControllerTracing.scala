@@ -16,9 +16,8 @@
 
 package com.github.levkhomich.akka.tracing.play
 
-import akka.event.LoggingAdapter
-import akka.event.slf4j.Slf4jLogger
 import play.api.mvc._
+
 import com.github.levkhomich.akka.tracing.{TracingExtension, TracingExtensionImpl}
 import play.libs.Akka
 
@@ -31,15 +30,6 @@ trait PlayControllerTracing {
   protected implicit def trace: TracingExtensionImpl = TracingExtension(play.libs.Akka.system)
 
   lazy protected val log : TracedLog = new TracedLog
-
-//  lazy protected def traceLog(msg : String)(implicit request : RequestHeader) = {
-//    trace.record(request,msg)
-//  }
-//
-//  lazy protected def traceLog(e : Throwable,msg : String)(implicit request : RequestHeader) = {
-//    trace.record(request,s"Exception happened: ${msg}")
-//    trace.record(request,e)
-//  }
 
   protected class TracedLog {
     val loggingSystem = akka.event.Logging(Akka.system(), this.getClass)

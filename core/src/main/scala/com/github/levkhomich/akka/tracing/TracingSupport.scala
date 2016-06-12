@@ -16,8 +16,6 @@
 
 package com.github.levkhomich.akka.tracing
 
-import akka.actor.ActorSystem
-
 import scala.util.Random
 
 trait BaseTracingSupport extends Any {

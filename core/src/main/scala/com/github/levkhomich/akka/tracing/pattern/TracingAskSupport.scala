@@ -17,10 +17,11 @@
 package com.github.levkhomich.akka.tracing.pattern
 
 import scala.concurrent.{ExecutionContext, Future}
+
 import akka.actor.{ActorRef, ActorSelection}
 import akka.util.Timeout
+
 import com.github.levkhomich.akka.tracing.{BaseTracingSupport, TracingExtensionImpl}
-import org.slf4j.LoggerFactory
 
 
 trait TracingAskSupport {
@@ -42,7 +43,6 @@ trait TracingAskSupport {
 }
 
 final class TracedAskableActorRef(val actorRef: ActorRef) extends AnyVal {
-  def log = LoggerFactory.getLogger(TracedAskableActorRef.this.getClass())
 
   def ask(message: BaseTracingSupport)
          (implicit timeout: Timeout, ec: ExecutionContext, trace: TracingExtensionImpl): Future[Any] = {
@@ -65,7 +65,6 @@ final class TracedAskableActorRef(val actorRef: ActorRef) extends AnyVal {
 
 
 final class TracedAskableActorSelection(val actorSel: ActorSelection) extends AnyVal {
-  def log = LoggerFactory.getLogger(TracedAskableActorSelection.this.getClass())
 
   def ask(message: BaseTracingSupport)
          (implicit timeout: Timeout, ec: ExecutionContext, trace: TracingExtensionImpl): Future[Any] = {

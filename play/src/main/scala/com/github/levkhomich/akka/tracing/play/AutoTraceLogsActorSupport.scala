@@ -3,7 +3,7 @@ package com.github.levkhomich.akka.tracing.play
 import com.github.levkhomich.akka.tracing.{ActorTracing, TraceSource, TracingExtension, TracingExtensionImpl}
 import play.libs.Akka
 
-trait AutoTraceLogsSupport extends ActorTracing {
+trait AutoTraceLogsActorSupport extends ActorTracing {
 
   lazy protected val log = new TracedActorLog
 
