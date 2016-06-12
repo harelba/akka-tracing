@@ -18,6 +18,7 @@ package com.github.levkhomich.akka.tracing
 
 import akka.actor.{Actor, DiagnosticActorLogging}
 import akka.event.Logging.{InitializeLogger, LogEvent, LoggerInitialized, MDC, emptyMDC}
+
 import com.github.levkhomich.akka.tracing.http.TracingHeaders
 
 trait TracingActorLogging extends DiagnosticActorLogging {
