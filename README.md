@@ -1,3 +1,11 @@
+
+Ported the amazing akka-tracing framework for using with Play 2.4
+
+Still in the cleanup phase.
+
+
+
+
 Akka Tracing [![Maven Central](https://img.shields.io/maven-central/v/com.github.levkhomich/akka-tracing-core_2.11.svg?style=flat-square)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.levkhomich%22%20akka-tracing)
 ============
 
