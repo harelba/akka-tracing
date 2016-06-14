@@ -12,8 +12,8 @@ object AkkaTracingBuild extends Build {
     testSettings ++
     publicationSettings ++
     Seq (
-      organization := "com.github.levkhomich",
-      version := "0.4-play24",
+      organization := "com.github.harelba",
+      version := "0.4-play24-SNAPSHOT",
       homepage := Some(url("https://github.com/levkhomich/akka-tracing")),
       startYear := Some(2014),
       licenses := Seq("Apache Public License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
@@ -45,7 +45,7 @@ object AkkaTracingBuild extends Build {
     Seq(
       parallelExecution in Test := false,
       // TODO: check why %% doesn't work
-      previousArtifact := Some(organization.value % (moduleName.value + '_' + scalaBinaryVersion.value) % "0.4-SNAPSHOT"),
+      previousArtifact := Some(organization.value % (moduleName.value + '_' + scalaBinaryVersion.value) % "0.4-play24-SNAPSHOT"),
       scalacOptions in Test ++= Seq("-Yrangepos"),
       testOptions in Test := Seq(Tests.Filter(!"true".equals(System.getenv("CI")) || !_.contains("Performance")))
     )
@@ -86,6 +86,7 @@ object AkkaTracingBuild extends Build {
         </developer>
       </developers>
   )
+ credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
 
   lazy val root = Project(
     id = "akka-tracing-root",
