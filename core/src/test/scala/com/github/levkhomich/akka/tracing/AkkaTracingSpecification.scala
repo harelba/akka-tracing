@@ -24,12 +24,16 @@ import org.specs2.mutable.Specification
 
 abstract class AkkaTracingSpecification extends Specification {
 
-  def testActorSystem(sampleRate: Int = 1): ActorSystem =
+  def testActorSystem(sampleRate: Int = 1,enabledStrategyClassName : Option[String] = None): ActorSystem = {
+    val m = enabledStrategyClassName match {
+      case None => Map(TracingExtension.AkkaTracingSampleRate -> sampleRate)
+      case Some(className) => Map(TracingExtension.AkkaTracingSampleRate -> sampleRate, TracingExtension.AkkaTracingEnabledStrategy -> className)
+    }
+
     ActorSystem("AkkaTracingTestSystem" + sampleRate,
-      ConfigFactory.parseMap(scala.collection.JavaConversions.mapAsJavaMap(
-        Map(TracingExtension.AkkaTracingSampleRate -> sampleRate)
-      ))
+      ConfigFactory.parseMap(scala.collection.JavaConversions.mapAsJavaMap(m))
     )
+  }
 
   def generateTraces(count: Int, trace: TracingExtensionImpl): Unit = {
     println(s"sending $count messages")

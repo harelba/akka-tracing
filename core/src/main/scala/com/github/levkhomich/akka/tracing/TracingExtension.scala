@@ -21,18 +21,65 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 
 import akka.actor._
-import org.apache.thrift.transport.{TSocket, TFramedTransport}
+import com.sun.xml.internal.bind.v2.runtime.reflect.DefaultTransducedAccessor
+import org.apache.thrift.transport.{TFramedTransport, TSocket}
+
+import scala.util.control.NonFatal
 
 /**
  * Tracer instance providing trace related methods.
- * @param system parent actor system
+  *
+  * @param system parent actor system
  */
+
+trait TracingEnabledStrategy {
+  def isEnabled() : AtomicBoolean
+}
+
+class NoopTracingEnabledStrategy() extends TracingEnabledStrategy {
+
+  override def isEnabled() : AtomicBoolean = {
+    new AtomicBoolean(false)
+  }
+}
+
+class DefaultTracingEnabledStrategy(enabled : Boolean) extends TracingEnabledStrategy {
+  val e = new AtomicBoolean(enabled)
+
+  override def isEnabled() : AtomicBoolean = {
+    e
+  }
+}
+
 class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   import TracingExtension._
   import SpanHolder._
 
-  private[this] val enabled = new AtomicBoolean(system.settings.config.getBoolean(AkkaTracingEnabled))
+  val enabledStrategy : TracingEnabledStrategy = {
+    try {
+      val strategy = if (system.settings.config.hasPath(AkkaTracingEnabledStrategy)) {
+        val strategyClassName = system.settings.config.getString(AkkaTracingEnabledStrategy)
+        Class.forName(strategyClassName) match {
+          case s : Class[TracingEnabledStrategy] => s.newInstance()
+          case _ => throw new RuntimeException(s"Strategy ${strategyClassName} not found. Cannot instantiate 'enabled' strategy. Failing.")
+        }
+      }
+      else {
+        new DefaultTracingEnabledStrategy(system.settings.config.getBoolean(AkkaTracingEnabled))
+      }
+      system.log.info(s"Gonna use ${strategy.getClass.getName} 'enabled' strategy")
+      strategy
+    }
+    catch {
+      case NonFatal(t) => {
+        system.log.info(s"Could not create 'enabled' strategy. Failing")
+        throw new RuntimeException("Could not create 'enabled' strategy. Failing",t)
+      }
+    }
+  }
+
+  private[this] def enabled = enabledStrategy.isEnabled
   private[this] val msgCounter = new AtomicLong()
   private[this] val sampleRate = system.settings.config.getInt(AkkaTracingSampleRate)
 
@@ -61,7 +108,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records string message and attaches it to timeline.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param msg recorded string
    */
   def record(ts: BaseTracingSupport, msg: String): Unit =
@@ -70,7 +118,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records exception's stack trace to trace.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param e recorded exception
    */
   def record(ts: BaseTracingSupport, e: Throwable): Unit =
@@ -82,7 +131,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -91,7 +141,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -100,7 +151,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -109,7 +161,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -118,7 +171,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -127,7 +181,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -136,7 +191,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -145,7 +201,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Records key-value pair and attaches it to trace's binary annotations.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param key recorded key
    * @param value recorded value
    */
@@ -155,7 +212,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
   /**
    * Enables message tracing, names and samples it. After sampling any nth message
    * (defined by akka.tracing.sample-rate setting) will be actually traced.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param service service name
    * @param rpc RPC name
    */
@@ -169,7 +227,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
   /**
    * Enables message tracing, names and samples it. Message will be traced ignoring
    * akka.tracing.sample-rate setting.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param service service name
    * @param rpc RPC name
    */
@@ -183,7 +242,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
    * Enables message tracing, names (rpc name is assumed to be message's class name)
    * and samples it. After sampling any nth message (defined by akka.tracing.sample-rate setting)
    * will be actually traced.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param service service name
    */
   def sample(ts: BaseTracingSupport, service: String): Unit =
@@ -192,7 +252,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
   /**
    * Enables message tracing, names (rpc name is assumed to be message's class name)
    * and samples it. Message will be traced ignoring akka.tracing.sample-rate setting.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param service service name
    */
   def forcedSample(ts: BaseTracingSupport, service: String): Unit =
@@ -200,7 +261,8 @@ class TracingExtensionImpl(system: ActorSystem) extends Extension {
 
   /**
    * Marks request processing start.
-   * @param ts traced message
+    *
+    * @param ts traced message
    * @param service service name
    */
   private[tracing] def start(ts: BaseTracingSupport, service: String): Unit =
@@ -241,6 +303,7 @@ object TracingExtension extends ExtensionId[TracingExtensionImpl] with Extension
   private[tracing] val AkkaTracingPort = "akka.tracing.port"
   private[tracing] val AkkaTracingSampleRate = "akka.tracing.sample-rate"
   private[tracing] val AkkaTracingEnabled = "akka.tracing.enabled"
+  private[tracing] val AkkaTracingEnabledStrategy = "akka.tracing.enabled-strategy"
 
   override def lookup(): this.type =
     TracingExtension
